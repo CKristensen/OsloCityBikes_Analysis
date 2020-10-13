@@ -1,4 +1,3 @@
-
 import os
 import psycopg2
 import requests
@@ -30,7 +29,7 @@ def get_month_to_db(date, tablename):
     
     # To db
     try:
-        df.to_sql(tablename, engine, index=True, schema='bysykkel', if_exists='replace', chunksize=1000)
+        df.to_sql(tablename, engine, index=False, schema='bysykkel', if_exists='replace', chunksize=1000)
         print("Sending data to db!")
         
     except:
