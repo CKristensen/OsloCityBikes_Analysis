@@ -1,4 +1,4 @@
-# OsloCityBikes_Analysis
+# Oslo CityBikes Analysis
 Analysing Oslo City Bikes and finding out what affects users behaviour
 
 Project for AW Academy
