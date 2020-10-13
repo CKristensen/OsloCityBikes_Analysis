@@ -15,3 +15,10 @@ services:
       - DB_USER=${DB_USER}
       - DB_NAME=${DB_NAME}
       - DB_URL=${DB_URL}
+  citybikes:
+    build: ./city_bikes/
+    environment:
+      - PASS_P=${PASS_P}
+      - USER_NAME_P=${USER_NAME_P}
+      - HOST_P=${HOST_P}
+      - DB_TEAM=${DB_TEAM}
