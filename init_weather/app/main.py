@@ -120,7 +120,7 @@ def insert_weather_stations_latlon():
             arg['name']), str(arg['lat']), str(arg['lon'])))
 
     query = '''insert into weather.wind_stations(id_, name_, lat_, lon_)
-                        values (%s, %s, %s, %s)'''
+                        values (%s, %s, %s, %s) ON CONFLICT DO NOTHING'''
 
     cur.executemany(query, arg_list)
 
@@ -133,9 +133,8 @@ def init_database():
     with open('init_db.sql', 'r') as sql_file:
         cur.execute(sql_file.read())
     db.close(conn, cur)
-    insert_weather_stations_latlon()
 
-def get_wind_speed_by_hour(dates, sourceId = 'SN18210, SN18700, SN76914'):
+def get_wind_speed_by_hour(dates, sourceId = 'SN18700'):
     
     # today = str(date.today())
     endpoint = 'https://frost.met.no/observations/v0.jsonld'
@@ -177,7 +176,7 @@ def get_wind_speed_by_hour(dates, sourceId = 'SN18210, SN18700, SN76914'):
     df = df.reset_index()
     return df
 
-def get_temperatur_by_hour(dates, sourceId='SN18210, SN18815, SN18315, SN18700'):
+def get_temperatur_by_hour(dates, sourceId='SN18700'):
 
     # today = str(date.today())
     endpoint = 'https://frost.met.no/observations/v0.jsonld'
@@ -219,7 +218,7 @@ def get_temperatur_by_hour(dates, sourceId='SN18210, SN18815, SN18315, SN18700')
     df = df.reset_index()
     return df
 
-def get_precipitation_by_day(dates, sourceId='SN18210, SN18815, SN18315, SN18700'):
+def get_precipitation_by_day(dates, sourceId='SN18700'):
     
     # today = str(date.today())
     endpoint = 'https://frost.met.no/observations/v0.jsonld'

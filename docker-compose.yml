@@ -2,12 +2,19 @@ version: "3.8"
 services:
   weather:
     build: ./init_weather/
-    environment:
-      - DB_PASS=${DB_PASS}
-      - DB_USER=${DB_USER}
-      - DB_NAME=${DB_NAME}
-      - DB_URL=${DB_URL}
-      - FROST_API_CLIENT_ID=${FROST_API_CLIENT_ID}
+  #   environment:
+  #     - DB_PASS=${DB_PASS}
+  #     - DB_USER=${DB_USER}
+  #     - DB_NAME=${DB_NAME}
+  #     - DB_URL=${DB_URL}
+  #     - FROST_API_CLIENT_ID=${FROST_API_CLIENT_ID}
+  # citybikes:
+  #   build: ./city_bikes/
+  #   environment:
+  #     - PASS_P=${PASS_P}
+  #     - USER_NAME_P=${USER_NAME_P}
+  #     - HOST_P=${HOST_P}
+  #     - DB_TEAM=${DB_TEAM}
   star:
     build: ./init_star/
     environment:
@@ -15,10 +22,3 @@ services:
       - DB_USER=${DB_USER}
       - DB_NAME=${DB_NAME}
       - DB_URL=${DB_URL}
-  citybikes:
-    build: ./city_bikes/
-    environment:
-      - PASS_P=${PASS_P}
-      - USER_NAME_P=${USER_NAME_P}
-      - HOST_P=${HOST_P}
-      - DB_TEAM=${DB_TEAM}

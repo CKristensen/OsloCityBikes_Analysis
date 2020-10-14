@@ -33,7 +33,7 @@ def init_star_schema():
     with open('db/init_star.sql','r') as sql_file:
         cur.execute(sql_file.read())
     close(conn, cur)
-if __name__ == '__main__'
+if __name__ == '__main__':
     try:
         init_star_schema()
     except:
