@@ -271,7 +271,7 @@ def iter_dates():
                 next_year+= 1
             if((year == 2016) & (int(month) < 3)):
                 continue
-            if((year == 2020) & (int(month)==11)):
+            if((year == 2020) & (int(month)==9)):
                 break
             yield f'{year}-{month}-02/{next_year}-{next_month}-01'
 
@@ -313,8 +313,13 @@ def insert_precipitation_by_day(dates = '2020-09-09/2020-10-10'):
     cur.executemany(query, arg_list)
     db.close(conn, cur)
 
-dates = '2020-09-01/2020-10-01'
-init_database()
-insert_wind_speed_by_hour(dates)
-insert_temperatur_by_hour(dates)
-insert_precipitation_by_day(dates)
+# dates = '2020-09-01/2020-10-01'
+# init_database()
+# insert_wind_speed_by_hour(dates)
+# insert_temperatur_by_hour(dates)
+# insert_precipitation_by_day(dates)
+
+for dates in iter_dates():  
+    insert_wind_speed_by_hour(dates)
+    insert_temperatur_by_hour(dates)
+    insert_precipitation_by_day(dates)

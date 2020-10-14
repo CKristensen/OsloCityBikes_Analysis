@@ -294,3 +294,27 @@ update star.date
 set is_holiday = r.is_holiday
 from bysykkel."reddays 16-22" r 
 where r."Dates" = date_actual;
+
+select * from 
+star."date" d left join
+public.public_transport_strikes ts on d.date_actual = ts.dob ;
+
+alter table public.public_transport_strikes
+add column is_strike int;
+
+update public.public_transport_strikes
+set is_strike = 1;
+
+alter table star.date
+add column is_strike int;
+
+update star.date
+set is_strike = r.is_strike
+from public.public_transport_strikes r 
+where r.dob = date_actual;
+
+update star.date
+set is_strike = COALESCE(is_strike, 0);
+
+update star.date
+set is_holiday = COALESCE(is_holiday, 0);
