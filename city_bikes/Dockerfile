@@ -7,4 +7,4 @@ WORKDIR /app
 RUN pip install update
 COPY . .
 
-CMD ["python", "bysykkel_data.py"]
+CMD ["python", "elevation_api.py"]
