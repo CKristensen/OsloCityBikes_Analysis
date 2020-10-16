@@ -82,43 +82,6 @@ def get_all_stations(tablename='stations'):
 
 
 
-def get_locations_legacy():
-    URL_LEG_LOC = 'https://data-legacy.urbansharing.com/legacy_station_locations.csv'
-    resource = requests.get(URL_LEG_LOC)
-    # data = pd.read_csv(resource.content)
-    parse = str(resource.content).split('\\n')
-    data_leg = pd.DataFrame()
-    rows = []
-    for row in parse[1:-1]:
-        rows.append(row.split(','))
-    data_leg = pd.DataFrame(rows, columns=['leg_id', 'latitude', 'longitude'])
-
-    OBS_ROOT= "https://data-legacy.urbansharing.com/legacy_new_station_id_mapping.csv"
-    resource = requests.get(OBS_ROOT)
-    
-    parse = str(resource.content).split('\\n')
-    data = pd.DataFrame()
-    rows = []
-    for row in parse[1:-1]:
-        rows.append(row.split(','))
-    data = pd.DataFrame(rows, columns=['new', 'leg_id'])
-
-    data_leg = data_leg.merge(data,how='inner', on=['leg_id'])
-    
-    # # Create engine for db-connection:
-    # engine = create_engine(f'postgresql+psycopg2://{USER_NAME}:{PASS}@{HOST}/{DATABASE}')
-    # data.to_sql('new_legacy_table', engine, index=False, schema='bysykkel', if_exists='replace', method='multi', chunksize=1000)
-    # print("Sending data to db!")
-    
-    data_leg.set_index('new').to_excel('KJSHDKJBHASD.xls')
-    return 1
-
-
-
-
-
-
-
 
 
 

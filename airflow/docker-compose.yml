@@ -1,0 +1,25 @@
+version: '3'
+services:
+  webserver:
+    image: puckel/docker-airflow:1.10.1
+    build:
+      context: https://github.com/puckel/docker-airflow.git#1.10.1
+      dockerfile: Dockerfile
+      args:
+        AIRFLOW_DEPS: s3
+    restart: always
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Sequential
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./requirements.txt:/requirements.txt
+    ports:
+      - "8080:8080"
+    command: webserver
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
