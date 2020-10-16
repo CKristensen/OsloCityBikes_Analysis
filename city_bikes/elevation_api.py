@@ -8,11 +8,10 @@ import time
 
 
 # Database variabler
-PASS ="malin"
-USER_NAME ="student_malin"
-HOST ="ds-etl-academy.cgbivchwjzle.eu-west-1.rds.amazonaws.com"
-DATABASE = "gp_camaca"
-
+PASS =os.environ['DB_PASS']
+USER_NAME =os.environ['DB_USER']
+DATABASE =os.environ['DB_NAME']
+HOST = os.environ['DB_URL']
 
 # # Loading file and making subset
 # df_okt= pd.read_csv('10.csv')
