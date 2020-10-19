@@ -218,6 +218,8 @@ def transform_in_db():
                             cast(wind_speed_ms as float),
                             cast(precipitation_mm as float) from airflow.day_dump dd;''')
 
+        connection.execute('''REFRESH MATERIALIZED VIEW star.stationtripsview;''')
+
 def ping_postgres():
     test = ['hello', time.time()]
     test_pandas = pd.DataFrame([test], columns=['what', 'who'])

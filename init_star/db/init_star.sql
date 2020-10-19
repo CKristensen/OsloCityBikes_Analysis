@@ -319,7 +319,7 @@ set is_strike = COALESCE(is_strike, 0);
 update star.date
 set is_holiday = COALESCE(is_holiday, 0);
 
-create view star.stationTripsView as
+create materialized view star.stationTripsView as
 	with end_temp_t as (
 		select bt.end_station_id station_id, bt.end_date date, t.military_hour, count(*) as trips_ended
 		from star.station s 
