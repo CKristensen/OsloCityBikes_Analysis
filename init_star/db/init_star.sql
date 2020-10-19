@@ -319,7 +319,14 @@ set is_strike = COALESCE(is_strike, 0);
 update star.date
 set is_holiday = COALESCE(is_holiday, 0);
 
-create materialized view star.stationTripsView as
+create view star.hourly_weather as
+select date, military_hour, max(air_temperatur_celsius) air_temperatur_celsius, max(precipitation_mm) precipitation_mm, max(wind_speed_ms) wind_speed_ms from star.weather w 
+join star."time" t 
+on t.time_key = w.time_key 
+group by date, military_hour
+order by date, military_hour desc;
+
+create materialized view star.stationtripsview as
 	with end_temp_t as (
 		select bt.end_station_id station_id, bt.end_date date, t.military_hour, count(*) as trips_ended
 		from star.station s 
@@ -336,5 +343,5 @@ create materialized view star.stationTripsView as
 		coalesce(trips_ended, 0) trips_ended, coalesce(trips_started, 0) trips_started
 	from start_temp_t s full outer join end_temp_t e on s.station_id = e.station_id and s.date = e.date and s.military_hour = e.military_hour
 	order by coalesce(s.date, e.date), coalesce(s.military_hour, e.military_hour), coalesce(s.station_id, e.station_id)
-	) select station_id, s.date, time_key, trips_ended, trips_started, air_temperatur_celsius, precipitation_mm, wind_speed_ms
-	from sst s join star.weather w on ((w.date=s.date)and(w.time_key=s.military_hour));
+	) select station_id, s.date, s.military_hour, trips_ended, trips_started, air_temperatur_celsius, precipitation_mm, wind_speed_ms
+	from sst s join star.hourly_weather w on ((w.date=s.date)and(w.military_hour=s.military_hour));
