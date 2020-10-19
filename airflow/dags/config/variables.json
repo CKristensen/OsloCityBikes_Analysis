@@ -1,0 +1,8 @@
+{
+    "example_variables_config": {
+        "var1": "first",
+        "var2": "second",
+        "var3": "third"
+    }
+
+}

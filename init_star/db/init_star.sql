@@ -318,3 +318,23 @@ set is_strike = COALESCE(is_strike, 0);
 
 update star.date
 set is_holiday = COALESCE(is_holiday, 0);
+
+create view star.stationTripsView as
+	with end_temp_t as (
+		select bt.end_station_id station_id, bt.end_date date, t.military_hour, count(*) as trips_ended
+		from star.station s 
+			join star."bikeTrip" bt on bt.end_station_id = s.station_key_end
+			join star."time" t on bt.end_time = t.time_key_end
+		group by bt.end_station_id, bt.end_date, t.military_hour
+	), start_temp_t as (
+		select bt.start_station_id station_id, bt.start_date date, t.military_hour, count(*) as trips_started
+		from star.station s 
+			join star."bikeTrip" bt on bt.start_station_id = s.station_key_start
+			join star."time" t on bt.start_time = t.time_key_start 
+		group by bt.start_station_id, bt.start_date, t.military_hour
+	), sst as (select coalesce(s.station_id, e.station_id) station_id, coalesce(s.date, e.date) date, coalesce(s.military_hour, e.military_hour) military_hour,
+		coalesce(trips_ended, 0) trips_ended, coalesce(trips_started, 0) trips_started
+	from start_temp_t s full outer join end_temp_t e on s.station_id = e.station_id and s.date = e.date and s.military_hour = e.military_hour
+	order by coalesce(s.date, e.date), coalesce(s.military_hour, e.military_hour), coalesce(s.station_id, e.station_id)
+	) select station_id, s.date, time_key, trips_ended, trips_started, air_temperatur_celsius, precipitation_mm, wind_speed_ms
+	from sst s join star.weather w on ((w.date=s.date)and(w.time_key=s.military_hour));

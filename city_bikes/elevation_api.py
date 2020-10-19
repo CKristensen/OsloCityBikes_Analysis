@@ -20,8 +20,6 @@ HOST = os.environ['DB_URL']
 # # Group-by to get individual columns
 # group= df.groupby(by=['start_station_id','start_station_name','start_station_latitude','start_station_longitude']).count().reset_index()
 
-
-
 def get_elevation(df, lat_col, lon_col):
     
     api=[]
@@ -46,8 +44,6 @@ def get_elevation(df, lat_col, lon_col):
         elevation.append(el[0]['elevation'])  
             
     return elevation, api
-
-
 
 def get_locations_legacy():
     URL_LEG_LOC = 'https://data-legacy.urbansharing.com/legacy_station_locations.csv'

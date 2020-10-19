@@ -1,25 +1,17 @@
 version: '3'
 services:
   webserver:
-    image: puckel/docker-airflow:1.10.1
-    build:
-      context: https://github.com/puckel/docker-airflow.git#1.10.1
-      dockerfile: Dockerfile
-      args:
-        AIRFLOW_DEPS: s3
+    image: puckel/docker-airflow
     restart: always
-    environment:
-      - LOAD_EX=n
-      - EXECUTOR=Sequential
     volumes:
       - ./dags:/usr/local/airflow/dags
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./requirements.txt:/requirements.txt
     ports:
       - "8080:8080"
+      - "5432:5432"
     command: webserver
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+    environment:
+          - DB_PASS=${DB_PASS}
+          - DB_USER=${DB_USER}
+          - DB_URL=${DB_URL}
+          - DB_NAME=${DB_NAME}
+          - FROST_API_CLIENT_ID=${FROST_API_CLIENT_ID}
