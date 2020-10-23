@@ -8,10 +8,10 @@ import time
 
 
 # Database variabler
-PASS =os.environ['DB_PASS']
-USER_NAME =os.environ['DB_USER']
-DATABASE =os.environ['DB_NAME']
-HOST = os.environ['DB_URL']
+PASS = os.environ['PASS_P']
+USER_NAME = os.environ['USER_NAME_P']
+HOST = os.environ['HOST_P']
+DATABASE = os.environ['DB_TEAM']
 
 # # Loading file and making subset
 # df_okt= pd.read_csv('10.csv')
@@ -30,7 +30,7 @@ def get_elevation(df, lat_col, lon_col):
         time.sleep(1.5)
         print(i)
         i+=1
-        API= requests.get(f'https://api.opentopodata.org/v1/test-dataset?locations={lat},{lon}', timeout=5)
+        API= requests.get(f'https://api.opentopodata.org/v1/eudem25m?locations={lat},{lon}', timeout=5)
         print(API)
         try:
             data=API.json()

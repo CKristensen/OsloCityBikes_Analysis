@@ -1,4 +1,8 @@
 create schema if not exists "star";
+create schema if not exists "airflow";
+
+SELECT * FROM bysykkel.elevation;
+SELECT * FROM weather.temperature;
 
 /***ADDING STATION DIMENSION **/
 create table if not exists "star"."station" (
@@ -93,7 +97,6 @@ FROM generate_series('2000-01-01 00:00:00'::timestamp, '2000-01-01 23:59:59'::ti
 
 ALTER TABLE "star"."time" ADD CONSTRAINT times_time_key_pk PRIMARY KEY (time_key);
 
-
 update "star"."time" set time_key = ROUND(time_key/100, 0) where time_key > 0;
 
 alter table "star"."time"
@@ -111,8 +114,6 @@ DROP COLUMN quarter_hour;
 
 DELETE FROM "star"."time" 
 WHERE time_key=-1;
-
-
 
 
 /***ADDING DATE DIMENSION **/
@@ -228,18 +229,45 @@ create table if not exists "star"."bikeTrip" (
 	
 );
 
-insert into star.station 
-select start_station_id as station_key, 
-start_station_name as station_name, 
-start_station_description as description, 
-start_station_latitude as latitude, 
-start_station_longitude as longitude,
-start_station_id as station_key_start,
-start_station_id as staion_key_end
-from bysykkel.sep_obs so
-group by start_station_id, start_station_name, 
-start_station_description, start_station_latitude, start_station_longitude;
+alter table star.station add column elevation float;
 
+insert into star.station 
+select station_key, station_name, description, latitude,
+longitude, station_key station_key_start, station_key station_key_end, elevation
+from bysykkel.elevation;
+
+
+insert into star.station(station_key, station_key_start, station_key_end, station_name)
+select sid, sid, sid, '_LEGACY_' from
+(select distinct("Start station") sid from bysykkel.obos_data_legacy odl where "Start station" is not null) legacies 
+on conflict do nothing;
+
+create table bysykkel.temp_bike as
+select start_station_id, 
+	end_station_id, 
+	cast(to_char(cast(started_at  as date), 'YYYYMMDD') as int) as start_date, 
+	cast(to_char(cast(started_at  as time), 'HH24MI') as int) as start_time, 
+	cast(to_char(cast(ended_at  as date), 'YYYYMMDD') as int) as end_date, 
+	cast(to_char(cast(ended_at  as time), 'HH24MI') as int) as end_time, 
+	EXTRACT(EPOCH FROM (ended_at::timestamp - started_at::timestamp)) duration
+	from (select coalesce(start.station_key, odl."Start station") as start_station_id, 
+			"Start time" as started_at, 
+			"End time" as ended_at, 
+			coalesce(end_.station_key, odl."End station") as end_station_id
+			from bysykkel.obos_data_legacy odl 
+			left join (select station_key, leg_id from bysykkel.elevation) start on odl."Start station" = start.leg_id
+			left join (select station_key, leg_id from bysykkel.elevation) end_ on odl."End station" = end_.leg_id) kk;
+
+insert into bysykkel.temp_bike(start_station_id, end_station_id, start_date, start_time, end_date, end_time, duration)
+select cast(start_station_id as int),
+	cast(end_station_id as int), 
+	cast(to_char(cast(started_at  as date), 'YYYYMMDD') as int) as start_date, 
+	cast(to_char(cast(started_at  as time), 'HH24MI') as int) as start_time, 
+	cast(to_char(cast(ended_at  as date), 'YYYYMMDD') as int) as end_date, 
+	cast(to_char(cast(ended_at  as time), 'HH24MI') as int) as end_time, 
+	EXTRACT(EPOCH FROM (ended_at::timestamp - started_at::timestamp)) duration
+	from bysykkel.obos_data od;
+	
 
 create view star.weather as
 select cast(to_char(w.date_, 'YYYYMMDD') as int) as date, time_key, air_temperatur_celsius, precipitation_mm, wind_speed_ms
@@ -250,68 +278,68 @@ join weather.precipitation p on w.date_ = p.date_
 join star."time" tt on tt.military_hour=t.hour_
 where tt.time_key <> -1 order by w.date_, tt.time_key;
 
-with temp_trips as (
-	select start_station_id, 
-	end_station_id, 
-	cast(to_char(cast(started_at  as date), 'YYYYMMDD') as int) as start_date, 
-	cast(to_char(cast(started_at  as time), 'HH24MI') as int) as start_time, 
-	cast(to_char(cast(ended_at  as date), 'YYYYMMDD') as int) as end_date, 
-	cast(to_char(cast(ended_at  as time), 'HH24MI') as int) as end_time, 
-	duration
-	from bysykkel.sep_obs
-	) select date, 
-	start_station_id, end_station_id, 
-	start_date, start_time, 
-	end_date, end_time, 
-	duration, air_temperatur_celsius, 
-	wind_speed_ms , precipitation_mm
-	from star.weather w join temp_trips bt 
-	on bt.start_date = w.date  and bt.start_time = w.time_key ;
+create view star.weather_by_hour as
+select cast(to_char(w.date_, 'YYYYMMDD') as int) as date, tt.military_hour, 
+max(air_temperatur_celsius) air_temperatur_celsius, 
+max(precipitation_mm) precipitation_mm, max(wind_speed_ms) wind_speed_ms
+from weather.wind w
+join weather.temperature t 
+on t.date_ = w.date_ and t.hour_ =w.hour_
+join weather.precipitation p on w.date_ = p.date_
+join star."time" tt on tt.military_hour=t.hour_
+where tt.time_key <> -1 
+group by w.date_, tt.military_hour 
+order by w.date_, tt.military_hour ;
+
+truncate table star."bikeTrip";
 
 insert into star."bikeTrip" (start_station_id, end_station_id, start_date, start_time, end_date, end_time, duration, air_temperatur_celsius, wind_speed_ms, precipitation_mm)
-with temp_trips as (
-	select start_station_id, 
-	end_station_id, 
-	cast(to_char(cast(started_at  as date), 'YYYYMMDD') as int) as start_date, 
-	cast(to_char(cast(started_at  as time), 'HH24MI') as int) as start_time, 
-	cast(to_char(cast(ended_at  as date), 'YYYYMMDD') as int) as end_date, 
-	cast(to_char(cast(ended_at  as time), 'HH24MI') as int) as end_time, 
-	duration
-	from bysykkel.sep_obs
-	) select start_station_id, end_station_id, 
+ select start_station_id, end_station_id, 
 	start_date, start_time, 
 	end_date, end_time, 
 	duration, air_temperatur_celsius, 
 	wind_speed_ms , precipitation_mm
-	from star.weather w join temp_trips bt 
-	on bt.start_date = w.date  and bt.start_time = w.time_key ;
-	
+	from bysykkel.temp_bike bt left join star.weather w 
+	on bt.start_date = w.date  and bt.start_time = w.time_key;
+
+create table star.stationTripsFull as
+	with end_temp_t as (
+		select bt.end_station_id station_id, bt.end_date date, t.military_hour, count(*) as trips_ended
+		from star.station s 
+			join star."bikeTrip" bt on bt.end_station_id = s.station_key_end
+			join star."time" t on bt.end_time = t.time_key_end
+		group by bt.end_station_id, bt.end_date, t.military_hour
+	), start_temp_t as (
+		select bt.start_station_id station_id, bt.start_date date, t.military_hour, count(*) as trips_started
+		from star.station s 
+			join star."bikeTrip" bt on bt.start_station_id = s.station_key_start
+			join star."time" t on bt.start_time = t.time_key_start 
+		group by bt.start_station_id, bt.start_date, t.military_hour
+	), sst as (select coalesce(s.station_id, e.station_id) station_id, coalesce(s.date, e.date) date, coalesce(s.military_hour, e.military_hour) military_hour,
+		coalesce(trips_ended, 0) trips_ended, coalesce(trips_started, 0) trips_started
+	from start_temp_t s full outer join end_temp_t e on s.station_id = e.station_id and s.date = e.date and s.military_hour = e.military_hour
+	) select station_id, s.date, s.military_hour, trips_ended, trips_started, air_temperatur_celsius, precipitation_mm, wind_speed_ms
+	from sst s join star.weather_by_hour w on ((w.date=s.date)and(w.military_hour=s.military_hour));
+
+
+create view star.present_stations as
+select * from star.station where station_name not like '_LEGACY_';
 
 alter table star.date
 add column is_holiday int;
 
 update star.date
 set is_holiday = r.is_holiday
-from bysykkel."reddays 16-22" r 
-where r."Dates" = date_actual;
-
-select * from 
-star."date" d left join
-public.public_transport_strikes ts on d.date_actual = ts.dob ;
-
-alter table public.public_transport_strikes
-add column is_strike int;
-
-update public.public_transport_strikes
-set is_strike = 1;
+from bysykkel.reddays r 
+where cast(r."Dates" as date) = date_actual;
 
 alter table star.date
 add column is_strike int;
 
 update star.date
 set is_strike = r.is_strike
-from public.public_transport_strikes r 
-where r.dob = date_actual;
+from bysykkel.strikes r 
+where cast(r.dob as date) = date_actual;
 
 update star.date
 set is_strike = COALESCE(is_strike, 0);
@@ -319,14 +347,7 @@ set is_strike = COALESCE(is_strike, 0);
 update star.date
 set is_holiday = COALESCE(is_holiday, 0);
 
-create view star.hourly_weather as
-select date, military_hour, max(air_temperatur_celsius) air_temperatur_celsius, max(precipitation_mm) precipitation_mm, max(wind_speed_ms) wind_speed_ms from star.weather w 
-join star."time" t 
-on t.time_key = w.time_key 
-group by date, military_hour
-order by date, military_hour desc;
-
-create materialized view star.stationtripsview as
+create view star.stationtripsview as
 	with end_temp_t as (
 		select bt.end_station_id station_id, bt.end_date date, t.military_hour, count(*) as trips_ended
 		from star.station s 
@@ -344,4 +365,19 @@ create materialized view star.stationtripsview as
 	from start_temp_t s full outer join end_temp_t e on s.station_id = e.station_id and s.date = e.date and s.military_hour = e.military_hour
 	order by coalesce(s.date, e.date), coalesce(s.military_hour, e.military_hour), coalesce(s.station_id, e.station_id)
 	) select station_id, s.date, s.military_hour, trips_ended, trips_started, air_temperatur_celsius, precipitation_mm, wind_speed_ms
-	from sst s join star.hourly_weather w on ((w.date=s.date)and(w.military_hour=s.military_hour));
+	from sst s join star.weather_by_hour w on ((w.date=s.date)and(w.military_hour=s.military_hour));
+
+
+create view star.stationtrips_include_empty as
+with station_hours as (select * from (select * from star.date where month_actual > 3) date
+						cross join (select distinct(military_hour) from star.time where military_hour > 4) time
+						cross join (select station_key from star.present_stations ps) station
+						order by date_actual desc, military_hour
+						) select date_key, s.military_hour, s.station_key, coalesce(trips_ended, 0) trips_ended, coalesce(trips_started, 0) trips_started,
+						wh.air_temperatur_celsius, wh.precipitation_mm, wh.wind_speed_ms 
+						from station_hours s
+						left join (select * from star.stationtripsview where military_hour > 4) stat
+						on stat.date = s.date_key and stat.military_hour = s.military_hour and stat.station_id=s.station_key
+						join (select * from star.weather_by_hour where military_hour > 4) wh 
+						on wh.military_hour = s.military_hour and s.date_key = wh.date;
+					

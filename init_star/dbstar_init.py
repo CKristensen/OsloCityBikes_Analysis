@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import sql
 import os
 import logging
+import time
 
 PASS = os.environ['DB_PASS']
 USER = os.environ['DB_USER']
@@ -32,9 +33,14 @@ def init_star_schema():
     conn, cur = connect()
     with open('db/init_star.sql','r') as sql_file:
         cur.execute(sql_file.read())
+            
     close(conn, cur)
+
 if __name__ == '__main__':
-    try:
-        init_star_schema()
-    except:
-        print('Database Already Initialized')
+    while(True):
+        try:
+            init_star_schema()
+            break
+        except:
+            print('Waiting for Datasources')
+            time.sleep(60)

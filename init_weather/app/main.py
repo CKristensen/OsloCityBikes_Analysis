@@ -6,6 +6,7 @@ import re
 import os
 from datetime import date, timedelta
 import numpy as np
+import time
 
 # Insert your own client ID here
 CLIENT_ID = os.environ['FROST_API_CLIENT_ID']
@@ -313,12 +314,16 @@ def insert_precipitation_by_day(dates = '2020-09-09/2020-10-10'):
     cur.executemany(query, arg_list)
     db.close(conn, cur)
 
-# dates = '2020-09-01/2020-10-01'
-# init_database()
-# insert_wind_speed_by_hour(dates)
-# insert_temperatur_by_hour(dates)
-# insert_precipitation_by_day(dates)
 
+
+i = 100
+while(i>0):
+    try:
+        init_database()
+    except:
+        i -= 1
+        print('Database still not up!')
+        time.sleep(5)
 for dates in iter_dates():  
     insert_wind_speed_by_hour(dates)
     insert_temperatur_by_hour(dates)

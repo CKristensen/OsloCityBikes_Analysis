@@ -4,13 +4,13 @@ import requests
 import pandas as pd
 import time
 from sqlalchemy import create_engine
+from sqlalchemy.schema import CreateSchema
 from zipfile import ZipFile
 
-# Database variabler
-# PASS = os.environ['PASS_P']
-# USER_NAME = os.environ['USER_NAME_P']
-# HOST = os.environ['HOST_P']
-# DATABASE = os.environ['DB_TEAM']
+PASS = os.environ['PASS_P']
+USER_NAME = os.environ['USER_NAME_P']
+HOST = os.environ['HOST_P']
+DATABASE = os.environ['DB_TEAM']
 
 def get_legacy_month_to_db(date, tablename):
     '''Function to load data from website as json, save it as dataframe,
@@ -71,22 +71,6 @@ def get_all_stations(tablename='stations'):
             
     return all_stations
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def get_month_to_db(date, tablename):
     '''Function to load data from website as json, save it as dataframe,
         and send the dataframe to postgres-db'''
@@ -124,40 +108,50 @@ def iter_dates(legacy=False):
                 else:
                     yield f'{year}/{month}.csv.zip'
 
-# Inserting legacy-data into D
-
-
 def legacy_ny_table_insert():
         
-    OBS_ROOT= "https://data-legacy.urbansharing.com/legacy_new_station_id_mapping.csv"
-    resource = requests.get(OBS_ROOT)
-    # data = pd.read_csv(resource.content)
-    parse = str(resource.content).split('\\n')
-    data = pd.DataFrame()
-    rows = []
-    for row in parse[1:-1]:
-        rows.append(row.split(','))
-    data = pd.DataFrame(rows, columns=['new', 'legacy'])
-    # Create engine for db-connection:
+    # OBS_ROOT= "https://data-legacy.urbansharing.com/legacy_new_station_id_mapping.csv"
+    # resource = requests.get(OBS_ROOT)
+    # # data = pd.read_csv(resource.content)
+    # parse = str(resource.content).split('\\n')
+    # data = pd.DataFrame()
+    # rows = []
+    # for row in parse[1:-1]:
+    #     rows.append(row.split(','))
+    # data = pd.DataFrame(rows, columns=['new', 'legacy'])
+    # # Create engine for db-connection:
     engine = create_engine(f'postgresql+psycopg2://{USER_NAME}:{PASS}@{HOST}/{DATABASE}')
-    data.to_sql('new_legacy_table', engine, index=False, schema='bysykkel', if_exists='replace', method='multi', chunksize=1000)
+
+    data = pd.read_csv('reddays.csv')
+    data.to_sql('reddays', engine, index=False, schema='bysykkel', if_exists='replace', method='multi', chunksize=1000)
+
+    data = pd.read_csv('strikes.csv')
+    data.to_sql('strikes', engine, index=False, schema='bysykkel', if_exists='replace', method='multi', chunksize=1000)
+
+    data = pd.read_csv('elevation.csv')
+    data.to_sql('elevation', engine, index=False, schema='bysykkel', if_exists='replace', method='multi', chunksize=1000)
+
     print("Sending data to db!")
     return 1
 
 
+
+time.sleep(60)
+engine = create_engine(f'postgresql+psycopg2://{USER_NAME}:{PASS}@{HOST}/{DATABASE}')
+engine.execute(CreateSchema('bysykkel'))
+
 # # Inserting non-legacy data into DW
-# total_start_time = time.time()
-# for date in iter_dates():
-#     start_time = time.time()
-#     get_month_to_db(date, 'obos_data')
-#     print("--- %s seconds ---" % (time.time() - start_time))
-# print("--- %s total seconds ---" % (time.time() - total_start_time))
+total_start_time = time.time()
+for date in iter_dates():
+    start_time = time.time()
+    get_month_to_db(date, 'obos_data')
+    print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s total seconds ---" % (time.time() - total_start_time))
 
 # total_start_time = time.time()
-# for date in iter_dates(True):
-#     print(get_legacy_month_to_db(date, 'obos_data_legacy'))
-# print("--- %s total seconds ---" % (time.time() - total_start_time))
+for date in iter_dates(True):
+    print(get_legacy_month_to_db(date, 'obos_data_legacy'))
+print("--- %s total seconds ---" % (time.time() - total_start_time))
 
-# legacy_ny_table_insert()
 
-get_locations_legacy()
+legacy_ny_table_insert()

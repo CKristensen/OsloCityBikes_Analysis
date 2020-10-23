@@ -1,24 +1,47 @@
 version: "3.8"
 services:
-  # weather:
-  #   build: ./init_weather/
-  #   environment:
-  #     - DB_PASS=${DB_PASS}
-  #     - DB_USER=${DB_USER}
-  #     - DB_NAME=${DB_NAME}
-  #     - DB_URL=${DB_URL}
-  #     - FROST_API_CLIENT_ID=${FROST_API_CLIENT_ID}
+  # postgeslocal:
+  #     image: postgres
+  #     environment:
+  #       - POSTGRES_PASSWORD="pass"
+  #     ports:
+  #       - 5432:5432
+  #     volumes:
+  #       - type: volume
+  #         source: model
+  #         target: /var/lib/postgresql/data
   citybikes:
     build: ./city_bikes/
     environment:
-      - PASS_P=${PASS_P}
-      - USER_NAME_P=${USER_NAME_P}
-      - HOST_P=${HOST_P}
-      - DB_TEAM=${DB_TEAM}
-  # star:
-  #   build: ./init_star/
-  #   environment:
-  #     - DB_PASS=${DB_PASS}
-  #     - DB_USER=${DB_USER}
-  #     - DB_NAME=${DB_NAME}
-  #     - DB_URL=${DB_URL}
+        # - PASS_P="pass"
+        # - USER_NAME_P=postgres
+        # - DB_TEAM=postgres
+        # - HOST_P=postgeslocal
+          - PASS_P=${PASS_P}
+          - USER_NAME_P=${USER_NAME_P}
+          - HOST_P=${HOST_P}
+          - DB_TEAM=${DB_TEAM}
+  weather:
+      build: ./init_weather/
+      environment:
+        # - DB_PASS="pass"
+        # - DB_USER=postgres
+        # - DB_NAME=postgres
+        # - DB_URL=postgeslocal
+        - DB_PASS=${DB_PASS}
+        - DB_USER=${DB_USER}
+        - DB_NAME=${DB_NAME}
+        - DB_URL=${DB_URL}
+        - FROST_API_CLIENT_ID=${FROST_API_CLIENT_ID}
+  star:
+      build: ./init_star/
+      environment:
+        - DB_PASS=${DB_PASS}
+        - DB_USER=${DB_USER}
+        - DB_NAME=${DB_NAME}
+        - DB_URL=${DB_URL}
+      depends_on:
+      - "weather"
+      - "citybikes"
+volumes:
+  model:
