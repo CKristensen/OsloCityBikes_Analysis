@@ -14,9 +14,10 @@ The following image is the visualization of the program workflow.
 The commune of Norway wants to better know what conditions most affect thebehaviour of the Oslo Bysykkel users.
 
 For this project we want to answer the following questions:
--What are the most popular bicycle stands?
--What starting and ending points are most popular in each hour?
--What starting and ending points are most popular each day of the week for eachmonth?
--How does weather change the behaviour of oslo bysykkel users.
--How does red days affect the behaviour of bysykkel users
--How does public transport strikes affect bysykkel users behaviour.
+
+- What are the most popular bicycle stands?
+- What starting and ending points are most popular in each hour?
+- What starting and ending points are most popular each day of the week for eachmonth?
+- How does weather change the behaviour of oslo bysykkel users.
+- How does red days affect the behaviour of bysykkel users
+- How does public transport strikes affect bysykkel users behaviour.
