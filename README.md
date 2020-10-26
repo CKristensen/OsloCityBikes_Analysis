@@ -10,7 +10,7 @@ The following image is the visualization of the program workflow.
 ![workflow](/visualization/initdbs.png)
 
 
-##Problem scope:
+## Problem scope:
 The commune of Norway wants to better know what conditions most affect thebehaviour of the Oslo Bysykkel users.
 
 For this project we want to answer the following questions:
