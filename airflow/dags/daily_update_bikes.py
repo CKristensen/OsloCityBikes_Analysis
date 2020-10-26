@@ -37,7 +37,7 @@ default_args = {
 dag = DAG(
     'daily_update',
     default_args=default_args,
-    description='A simple ping DAG',
+    description='updates bikeTrips star table daily',
     schedule_interval=timedelta(days=1),
     start_date=days_ago(1),
     # tags=['example'],
@@ -70,4 +70,5 @@ send_to_db = PythonOperator(task_id='tasks.data_into_db', python_callable=tasks.
 transform_in_db = PythonOperator(task_id='tasks.transform_in_db', python_callable=tasks.transform_in_db,
     dag=dag,)
 
-print_start >> rides >> temperature >> precipitation >> wind >> transform >> send_to_db >> transform_in_db
+
+print_start >> rides >> temperature >> precipitation >> wind >> transform >> send_to_db >> transform_in_db 
