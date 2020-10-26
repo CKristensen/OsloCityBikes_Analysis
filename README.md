@@ -1,5 +1,6 @@
 # Oslo CityBikes Analysis
 Builds a postgres Database with all data about Oslo City bikes since 2016.
+Includes information such as weather and station elevation.
 Uses PowerBI to visualize data and get insights.
 
 To create the database run the following comand in the main folder.
@@ -21,3 +22,8 @@ For this project we want to answer the following questions:
 - How does weather change the behaviour of oslo bysykkel users.
 - How does red days affect the behaviour of bysykkel users
 - How does public transport strikes affect bysykkel users behaviour.
+
+
+## Next steps:
+- Get information about each bike trip distance using google distance matrix api.
+- Get scooter data from Entur in order to compare with city bike.
